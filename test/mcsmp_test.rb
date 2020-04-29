@@ -65,11 +65,4 @@ class McsmpTest < Minitest::Test
     assert_equal MCSMP::MineCraftVersion.latest_snapshot, instance.version
     assert instance.version.download_information.download_url
   end
-
-  def test_server_instance_existing
-    instance =
-      MCSMP::ServerInstance.from_existing('C:/Users/Boris/Desktop/MCServer')
-    assert_equal '20w17a', instance.version.version
-    assert_equal 'survival', instance.properties[:gamemode]
-  end
 end

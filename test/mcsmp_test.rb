@@ -2,6 +2,7 @@
 
 require_relative 'test_helper'
 require 'mcsmp'
+require 'fileutils'
 
 # noinspection RubyInstanceMethodNamingConvention
 class McsmpTest < Minitest::Test
@@ -64,5 +65,22 @@ class McsmpTest < Minitest::Test
     assert_equal 'Bruh', instance.server_name
     assert_equal MCSMP::MineCraftVersion.latest_snapshot, instance.version
     assert instance.version.download_information.download_url
+  end
+
+  def test_file_watcher
+    temp_dir = Dir.mktmpdir('mcsmp-filewatcher')
+    FileUtils.touch(File.join(temp_dir, 'file.txt'))
+    changed = false
+    fw = MCSMP::Util::FileWatcher.new(File.join(temp_dir, 'file.txt')) do
+      changed = true
+    end
+    refute fw.running?
+    thread = fw.start
+    sleep 2
+    FileUtils.touch(File.join(temp_dir, 'file.txt'))
+    sleep 2
+    fw.stop
+    thread.join
+    assert changed
   end
 end

@@ -9,4 +9,9 @@ module MCSMP
   autoload :ServerProperties, 'mcsmp/server_properties'
   autoload :MineCraftVersion, 'mcsmp/minecraft_versioning'
   autoload :ServerInstance, 'mcsmp/server_instance'
+
+  # Utility methods and classes
+  module Util
+    autoload :FileWatcher, 'mcsmp/file_watcher'
+  end
 end

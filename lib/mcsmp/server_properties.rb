@@ -37,7 +37,7 @@ module MCSMP
     # Tests if a string matches all possible values allowed
     def enum(possible_values)
       lambda do |x, convert = false|
-        return string.call(x) if convert
+        return string.call(x, true) if convert
 
         string.call(x) && possible_values.include?(x)
       end
@@ -142,6 +142,12 @@ module MCSMP
         properties[key] = value
       end
       new properties
+    end
+
+    def self.from_file(path)
+      File.open(path) do |file|
+        from_config(file.read)
+      end
     end
 
     def []=(key, value)

@@ -35,7 +35,8 @@ class McsmpTest < Minitest::Test
     props = MCSMP::ServerProperties.from_config(
       "pvp=true\n# nice stuff\nhardcore=true\n"\
           "motd=Nice stuff boi\nmax-players=20\n"\
-          "rcon.port=69\ndifficulty=\n"
+          "rcon.port=69\ndifficulty=\n"\
+          "gamemode=survival\n"
     )
     assert_equal true, props[:pvp]
     assert_equal true, props[:hardcore]
@@ -43,6 +44,7 @@ class McsmpTest < Minitest::Test
     assert_equal 20, props[:max_players]
     assert_equal 69, props[:rcon__port]
     assert_nil props[:difficulty]
+    assert_equal "survival", props[:gamemode]
   end
 
   def test_version_manifest
@@ -62,5 +64,12 @@ class McsmpTest < Minitest::Test
     assert_equal 'Bruh', instance.server_name
     assert_equal MCSMP::MineCraftVersion.latest_snapshot, instance.version
     assert instance.version.download_information.download_url
+  end
+
+  def test_server_instance_existing
+    instance =
+      MCSMP::ServerInstance.from_existing('C:/Users/Boris/Desktop/MCServer')
+    assert_equal '20w17a', instance.version.version
+    assert_equal 'survival', instance.properties[:gamemode]
   end
 end

@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+require 'json'
+require 'zip'
 
 module MCSMP
   # A MineCraft server instance that synchronizes it's properties with
@@ -20,11 +22,32 @@ module MCSMP
       new(latest_snapshot, server_name, MCSMP::ServerProperties.new)
     end
 
-    def initialize(version, server_name, properties)
+    def self.from_existing(path)
+      version = get_version_from_jar(File.join(path, 'server.jar'))
+      mc_version = MCSMP::MineCraftVersion.specific_version(version)
+      server_config =
+        MCSMP::ServerProperties.from_file(File.join(path, 'server.properties'))
+      ServerInstance.new(mc_version,
+                         File.basename(path),
+                         server_config,
+                         exists: true)
+    end
+
+    def self.get_version_from_jar(jar_path)
+      archive = Zip::File.open(jar_path)
+      version_text = archive.glob('version.json')
+                            .first
+                            .get_input_stream
+                            .read
+      archive.close
+      JSON.parse(version_text)['id']
+    end
+
+    def initialize(version, server_name, properties, exists: false)
       @version = version
       @server_name = server_name
       @properties = properties
-      @exists = false
+      @exists = exists
     end
 
     def exists?

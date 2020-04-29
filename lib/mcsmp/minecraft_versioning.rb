@@ -117,6 +117,18 @@ module MCSMP
       @manifest = nil
     end
 
+    def specific_version(version_name)
+      version = stable.find do |v|
+        v.version == version_name
+      end
+      version ||= snapshot.find do |v|
+        v.version == version_name
+      end
+      raise ArgumentError, 'Version does not exist' unless version
+
+      version
+    end
+    
     class << self
       private
 

@@ -13,5 +13,6 @@ module MCSMP
   # Utility methods and classes
   module Util
     autoload :FileWatcher, 'mcsmp/file_watcher'
+    autoload :ProgressBar, 'mcsmp/download_progress_bar'
   end
 end

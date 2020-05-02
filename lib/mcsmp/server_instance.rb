@@ -1,12 +1,14 @@
 # frozen_string_literal: true
+
 require 'json'
 require 'zip'
+require 'fileutils'
 
 module MCSMP
   # A MineCraft server instance that synchronizes it's properties with
   # the physical server instance on the machine
   class ServerInstance
-    attr_accessor :version, :server_name, :properties
+    attr_accessor :version, :server_name, :properties, :physical_path
 
     def self.from_version(version, server_name)
       new(version, server_name, MCSMP::ServerProperties.new)
@@ -30,7 +32,8 @@ module MCSMP
       ServerInstance.new(mc_version,
                          File.basename(path),
                          server_config,
-                         exists: true)
+                         exists: true,
+                         physical_path: path)
     end
 
     def self.get_version_from_jar(jar_path)
@@ -43,19 +46,72 @@ module MCSMP
       JSON.parse(version_text)['id']
     end
 
-    def initialize(version, server_name, properties, exists: false)
+    def initialize(version,
+                   server_name,
+                   properties,
+                   exists: false,
+                   physical_path: nil)
       @version = version
       @server_name = server_name
       @properties = properties
       @exists = exists
+      @physical_path = physical_path
+      create_watcher unless physical_path.nil?
+    end
+
+    def create_at_path(parent_dir)
+      return if exists?
+
+      path = File.join(parent_dir, @server_name)
+      FileUtils.mkdir(path)
+      @physical_path = path
+      write_properties
+      File.open(File.join(path, 'eula.txt'), 'w') do |eula|
+        eula.write('eula=true')
+      end
+      print 'Downloading: '
+      @version.download_information.download(
+        File.join(path, 'server.jar'),
+        &MCSMP::Util::ProgressBar.new(@version.download_information.size).start
+      )
+      puts ' Done!'
+      @exists = true
+      create_watcher
     end
 
     def exists?
       @exists
     end
 
-    def synchronize; end
+    def write_properties
+      return if physical_path.nil?
 
-    def initialize_synchronizer; end
+      stop_watcher
+      File.open(File.join(physical_path, 'server.properties'), 'w') do |file|
+        file.write(@properties.to_config)
+      end
+      start_watcher
+    end
+
+    def start_watcher
+      watcher&.start
+    end
+
+    def stop_watcher
+      watcher&.stop
+    end
+
+    def create_watcher
+      @watcher =
+        MCSMP::Util::FileWatcher.new(
+          File.join(@physical_path, 'server.properties')
+        ) do |file|
+          @properties = MCSMP::ServerProperties.from_file(file)
+        end
+    end
+
+    private
+
+    attr_reader :watcher
   end
 end

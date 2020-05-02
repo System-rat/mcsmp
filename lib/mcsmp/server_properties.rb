@@ -129,7 +129,7 @@ module MCSMP
     end
 
     def self.from_config(data)
-      config_lines = data.lines.filter! { |line| !line.start_with? '#' }
+      config_lines = data.lines.filter { |line| !line.start_with? '#' }
       properties = {}
       config_lines.each do |line|
         next if line.start_with? '='

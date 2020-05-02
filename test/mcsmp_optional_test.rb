@@ -20,4 +20,16 @@ class MCSMPOptionalTest < Minitest::Test
     puts '| Done!'
     assert dl_info.verify_sha(jar_path)
   end
+
+  def test_create_server
+    tmp_dir = Dir.mktmpdir('mcspm-instance-test')
+    server = MCSMP::ServerInstance.from_version(
+      MCSMP::MineCraftVersion.latest_snapshot,
+      'BruhServer'
+    )
+    server.create_at_path(tmp_dir)
+    assert server.exists?
+    assert_path_exists server.physical_path
+    assert_path_exists File.join(server.physical_path, 'server.jar')
+  end
 end

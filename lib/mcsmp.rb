@@ -9,10 +9,12 @@ module MCSMP
   autoload :ServerProperties, 'mcsmp/server_properties'
   autoload :MineCraftVersion, 'mcsmp/minecraft_versioning'
   autoload :ServerInstance, 'mcsmp/server_instance'
+  autoload :ServerRunner, 'mcsmp/server_runner'
 
   # Utility methods and classes
   module Util
-    autoload :FileWatcher, 'mcsmp/file_watcher'
-    autoload :ProgressBar, 'mcsmp/download_progress_bar'
+    autoload :FileWatcher, 'mcsmp/util/file_watcher'
+    autoload :ProgressBar, 'mcsmp/util/download_progress_bar'
+    autoload :JVMArguments, 'mcsmp/util/jvm_arguments'
   end
 end

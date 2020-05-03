@@ -6,17 +6,10 @@ class MCSMPOptionalTest < Minitest::Test
     dir = Dir.mktmpdir('mcsmp')
     jar_path = File.join(dir, 'server.jar')
     dl_info = MCSMP::MineCraftVersion.snapshot.first.download_information
-    total = 0
-    threshold = 0.05
     print 'Downloading jar: |'
-    dl_info.download(jar_path) do |dc|
-      total += dc
-      if (total.to_f / dl_info.size) >= threshold
-        print '='
-        $stdout.flush
-        threshold += 0.05
-      end
-    end
+    dl_info.download(
+      jar_path, &MCSMP::Util::ProgressBar.new(dl_info.size).start
+    )
     puts '| Done!'
     assert dl_info.verify_sha(jar_path)
   end

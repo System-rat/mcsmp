@@ -10,11 +10,8 @@ require 'mcsmp'
 # (If you use this, don't forget to add pry to your Gemfile!)
 # require "pry"
 # Pry.start
-require 'irb'
-TOPLEVEL_BINDING.receiver.instance_eval do
-  @bruht = MCSMP::ConnectorConfig.new
-  def bruh
-    @bruht
-  end
-end
-IRB.start(__FILE__)
+
+latest = MCSMP::MineCraftVersion.latest_snapshot
+
+require 'pry'
+binding.pry

@@ -25,6 +25,7 @@ module MCSMP
     end
 
     def self.from_existing(path)
+      path = File.absolute_path(path)
       version = get_version_from_jar(File.join(path, 'server.jar'))
       mc_version = MCSMP::MineCraftVersion.specific_version(version)
       server_config =

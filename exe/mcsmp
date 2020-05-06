@@ -2,4 +2,29 @@
 # frozen_string_literal: true
 
 require 'mcsmp'
+require 'optparse'
 autoload :MCSMP, 'lib/mcsmp'
+
+options = {}
+
+case ARGV.shift
+when 'run'
+  OptionParser.new do |opts|
+    opts.banner = 'Usage: mcsmp [command] [options]'
+    opts.on('-p', '--path PATH', 'Server path') do |path|
+      options[:path] = path
+    end
+  end.parse!
+
+  options[:path] ||= File.absolute_path(Dir.pwd)
+
+  instance = MCSMP::ServerInstance.from_existing(options[:path])
+  runner = MCSMP::ServerRunner.new(instance)
+  runner.start_sync
+else
+  warn 'Invalid command.'
+end
+
+
+
+

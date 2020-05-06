@@ -12,10 +12,9 @@ module MCSMP
         '-XX:InitiatingHeapOccupancyPercent=10 '\
         '-XX:G1MixedGCLiveThresholdPercent=50 -XX:+AggressiveOpts'
 
-      def initialize(java_executable: 'java')
-        @initial_memory = '2G'
-        @max_memory = '4G'
-        @java_executable = java_executable
+      def initialize
+        @initial_memory = '1G'
+        @max_memory = '1G'
         @aggressive = false
       end
 
@@ -35,10 +34,9 @@ module MCSMP
       end
 
       def to_s
-        str =
-          "#{@java_executable} -Xms#{@initial_memory} -Xmx#{@max_memory}"
+        str = "-Xms#{@initial_memory} -Xmx#{@max_memory}"
         str += AGGRESSIVE_ARGUMENTS if @aggressive
-        str + ' -jar server.jar'
+        str
       end
     end
   end

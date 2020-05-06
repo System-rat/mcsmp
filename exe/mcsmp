@@ -3,28 +3,17 @@
 
 require 'mcsmp'
 require 'optparse'
+require 'thor'
 autoload :MCSMP, 'lib/mcsmp'
 
-options = {}
-
-case ARGV.shift
-when 'run'
-  OptionParser.new do |opts|
-    opts.banner = 'Usage: mcsmp [command] [options]'
-    opts.on('-p', '--path PATH', 'Server path') do |path|
-      options[:path] = path
-    end
-  end.parse!
-
-  options[:path] ||= File.absolute_path(Dir.pwd)
-
-  instance = MCSMP::ServerInstance.from_existing(options[:path])
-  runner = MCSMP::ServerRunner.new(instance)
-  runner.start_sync
-else
-  warn 'Invalid command.'
+# The main CLI
+class MCSMPCLI < Thor
+  desc 'run PATH', 'Run a MineCraft instance at the target PATH'
+  def run_server(path = File.absolute_path(Dir.pwd))
+    instance = MCSMP::ServerInstance.from_existing(path)
+    runner = MCSMP::ServerRunner.new(instance)
+    runner.start_sync
+  end
 end
 
-
-
-
+MCSMPCLI.start

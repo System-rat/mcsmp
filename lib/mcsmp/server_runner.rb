@@ -99,7 +99,7 @@ module MCSMP
         args =
           File.open(
             File.join(@instance.physical_path, 'arguments.txt'), 'r'
-          ) { |f| f.read.gsub('\n', '') }
+          ) { |f| f.read.gsub("\n", '') }
       end
       args
     end

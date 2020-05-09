@@ -2,7 +2,6 @@
 # frozen_string_literal: true
 
 require 'mcsmp'
-require 'optparse'
 require 'thor'
 autoload :MCSMP, 'lib/mcsmp'
 
@@ -13,6 +12,33 @@ class MCSMPCLI < Thor
     instance = MCSMP::ServerInstance.from_existing(path)
     runner = MCSMP::ServerRunner.new(instance)
     runner.start_sync
+  end
+
+  desc 'pry PATH', 'Run an PRY console at the target folder and get all'\
+    'server instances in it'
+  def pry_start(path = File.absolute_path(Dir.pwd))
+    require 'pry'
+
+    instances = MCSMP::Util.get_instances(path)
+    runners = autostart_instances(instances)
+    pry(Struct.new(:instances, :runners).new(instances, runners))
+
+  rescue GemNotFoundException
+    warn 'Install PRY to use this option: gem install pry'
+  end
+
+  private
+
+  def autostart_instances(instances)
+    runners = []
+    instances.each do |instance|
+      next unless File.exist?(File.join(instance.physical_path, '.autostart'))
+
+      runner = MCSMP::ServerRunner.new(instance)
+      runner.start_async
+      runners.push(runner)
+    end
+    runners
   end
 end
 

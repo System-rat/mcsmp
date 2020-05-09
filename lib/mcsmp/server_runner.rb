@@ -1,19 +1,22 @@
 # frozen_string_literal: true
 
+require 'open3'
+
 module MCSMP
   # A class responsible for running a ServerInstance
   class ServerRunner
-    attr_reader :instance, :log, :error_log
+    attr_reader :instance, :log
 
-    def initialize(server_instance, java_executable: 'java', jvm_arguments: nil)
+    def initialize(server_instance, java_executable: 'java', jvm_arguments: nil, log_limit: 100)
       unless server_instance.exists?
         raise ArgumentError, "ServerInstance doesn't exist on the machine,"\
                              'create it first before attempting to run it.'
       end
 
       @instance = server_instance
+      @log_limit = log_limit
+      @running = false
       @log = []
-      @error_log = []
       @log_mutex = Mutex.new
       @java_executable = java_executable
       @jvm_arguments =
@@ -26,22 +29,79 @@ module MCSMP
     #
     # @note this will block the current thread until the server is stopped
     def start_sync
+      return if @running
+
       jar_path = File.join(@instance.physical_path, 'server.jar')
-      arguments = @jvm_arguments.to_s
+      Process.wait(Process.spawn(
+                     "#{@java_executable} #{arguments} -jar #{jar_path}",
+                     chdir: @instance.physical_path
+      ))
+    end
+
+    # Start the server in the background, writing all output to the @log
+    # variable. Stdin writing is achieved using the ServerRunner#send_text
+    # method.
+    def start_async(&on_read)
+      return if @running
+
+      jar_path = File.join(@instance.physical_path, 'server.jar')
+      stdin, stdout, thread = Open3.popen2e(
+        "#{@java_executable} #{arguments} -jar #{jar_path}",
+        chdir: @instance.physical_path
+      )
+      @log = []
+      start_log_reader(stdout, thread, &on_read)
+      @stdin = stdin
+      @server_thread = thread
+      @running = true
+    end
+
+    def stop
+      return unless @running
+      return if @stdin.nil?
+
+      @stdin.puts 'stop'
+      @stdin = nil
+      @server_thread.join
+      @running = false
+    end
+
+    def send_text(text = '')
+      return if @stdin.nil?
+
+      @stdin.puts(text)
+    end
+
+    private
+
+    def start_log_reader(stdout, thread)
+      Thread.new do
+        loop do
+          break unless thread.alive?
+
+          begin
+            data = stdout.readline
+          rescue EOFError
+            break
+          end
+          @log_mutex.synchronize do
+            @log.push(data)
+            @log.pop(@log.size - @log_limit) if @log.size > @log_limit
+          end
+          yield(data) if block_given?
+        end
+      end
+    end
+
+    def arguments
+      args = @jvm_arguments.to_s
       if File.exist?(File.join(@instance.physical_path, 'arguments.txt'))
-        arguments =
+        args =
           File.open(
             File.join(@instance.physical_path, 'arguments.txt'), 'r'
           ) { |f| f.read.gsub('\n', '') }
       end
-      Process.wait(
-        Process.spawn(
-          "#{@java_executable} #{arguments} -jar #{jar_path}",
-          chdir: @instance.physical_path
-        )
-      )
+      args
     end
-
-    def start_async; end
   end
 end

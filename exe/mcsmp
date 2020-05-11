@@ -27,7 +27,7 @@ class MCSMPCLI < Thor
 
     instances = MCSMP::Util.get_instances(path)
     runners = get_runners(instances)
-    runners.each(&:start_async) unless options[:no_autostart]
+    autostart(runners) unless options[:no_autostart]
     if options[:with_server]
       MCSMP::HTTPConnector.configuration = {
         instances: instances,
@@ -50,7 +50,7 @@ class MCSMPCLI < Thor
   def start_connector(path = File.absolute_path(Dir.pwd))
     instances = MCSMP::Util.get_instances(path)
     runners = get_runners(instances)
-    runners.each(&:start_async) unless options[:no_autostart]
+    autostart(runners) unless options[:no_autostart]
     MCSMP::HTTPConnector.configuration = {
       instances: instances,
       secret: options[:secret],
@@ -71,6 +71,14 @@ class MCSMPCLI < Thor
       runners.push(runner)
     end
     runners
+  end
+
+  def autostart(runners)
+    runners.each do |r|
+      next unless File.exist?(File.join(r.instance.physical_path, '.autorun'))
+
+      r.start_async
+    end
   end
 end
 

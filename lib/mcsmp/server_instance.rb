@@ -111,6 +111,17 @@ module MCSMP
         end
     end
 
+    def to_json(*args)
+      {
+        server_name: @server_name,
+        version: {
+          id: @version.version,
+          is_snapshot: @version.is_snapshot
+        },
+        exists: @exists
+      }.to_json(args)
+    end
+
     private
 
     attr_reader :watcher

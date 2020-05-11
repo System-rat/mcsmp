@@ -5,7 +5,7 @@ require 'open3'
 module MCSMP
   # A class responsible for running a ServerInstance
   class ServerRunner
-    attr_reader :instance, :log
+    attr_reader :instance
 
     def initialize(server_instance, java_executable: 'java', jvm_arguments: nil, log_limit: 100)
       unless server_instance.exists?
@@ -22,6 +22,10 @@ module MCSMP
       @jvm_arguments =
         jvm_arguments ||
         MCSMP::Util::JVMArguments.new
+    end
+
+    def running?
+      @running
     end
 
     # Start the server in sync mode, the parent ruby process' stdin, stdout
@@ -70,6 +74,21 @@ module MCSMP
       return if @stdin.nil?
 
       @stdin.puts(text)
+    end
+
+    def to_json(*args)
+      {
+        running: running?,
+        instance: instance
+      }.to_json(args)
+    end
+
+    def log
+      logs = []
+      @log_mutex.synchronize do
+        logs = @log.clone
+      end
+      logs
     end
 
     private

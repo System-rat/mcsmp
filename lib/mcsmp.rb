@@ -11,6 +11,7 @@ module MCSMP
   autoload :MineCraftVersion, 'mcsmp/minecraft_versioning'
   autoload :ServerInstance, 'mcsmp/server_instance'
   autoload :ServerRunner, 'mcsmp/server_runner'
+  autoload :HTTPConnector, 'mcsmp/http_connector'
 
   # Utility methods and classes
   module Util

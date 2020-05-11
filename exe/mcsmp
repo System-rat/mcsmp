@@ -75,7 +75,7 @@ class MCSMPCLI < Thor
 
   def autostart(runners)
     runners.each do |r|
-      next unless File.exist?(File.join(r.instance.physical_path, '.autorun'))
+      next unless File.exist?(File.join(r.instance.physical_path, '.autostart'))
 
       r.start_async
     end

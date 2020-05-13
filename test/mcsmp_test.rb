@@ -12,9 +12,7 @@ class McsmpTest < Minitest::Test
 
   def test_connector_config_secret
     conf = MCSMP::ConnectorConfig.new
-    assert conf.connection_secret.nil?
-    secret = conf.generate_secret!
-    assert_equal conf.connection_secret, secret
+    refute conf.connection_secret.nil?
   end
 
   def test_server_properties

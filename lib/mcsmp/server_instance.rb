@@ -84,6 +84,15 @@ module MCSMP
       @exists
     end
 
+    def refresh_properties
+      return if physical_path.nil?
+
+      @properties =
+        MCSMP::ServerProperties.from_file(
+          File.join(physical_path, 'server.properties')
+        )
+    end
+
     def write_properties
       return if physical_path.nil?
 

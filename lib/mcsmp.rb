@@ -7,6 +7,7 @@ require 'fileutils'
 module MCSMP
   class Error < StandardError; end
   autoload :ConnectorConfig, 'mcsmp/connector_config'
+  autoload :Connector, 'mcsmp/connector'
   autoload :ServerProperties, 'mcsmp/server_properties'
   autoload :MineCraftVersion, 'mcsmp/minecraft_versioning'
   autoload :ServerInstance, 'mcsmp/server_instance'
@@ -37,6 +38,17 @@ module MCSMP
         end
         instance
       end
+    end
+
+    def get_runners(instances)
+      runners = []
+      instances.each do |instance|
+        next unless instance.exists?
+
+        runner = MCSMP::ServerRunner.new(instance)
+        runners.push(runner)
+      end
+      runners
     end
   end
 end

@@ -4,6 +4,8 @@ module MCSMP
   module Util
     # Holds various JVM arguments for easy configuration
     class JVMArguments
+      attr_reader :initial_memory, :max_memory, :aggressive
+
       AGGRESSIVE_ARGUMENTS =
         ' -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions '\
         '-XX:MaxGCPauseMillis=50 -XX:+DisableExplicitGC '\

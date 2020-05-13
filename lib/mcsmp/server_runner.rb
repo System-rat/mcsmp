@@ -6,6 +6,7 @@ module MCSMP
   # A class responsible for running a ServerInstance
   class ServerRunner
     attr_reader :instance
+    attr_accessor :jvm_arguments
 
     def initialize(server_instance, java_executable: 'java', jvm_arguments: nil, log_limit: 100)
       unless server_instance.exists?
@@ -15,7 +16,6 @@ module MCSMP
 
       @instance = server_instance
       @log_limit = log_limit
-      @running = false
       @log = []
       @log_mutex = Mutex.new
       @java_executable = java_executable
@@ -25,7 +25,7 @@ module MCSMP
     end
 
     def running?
-      @running
+      @server_thread&.alive?
     end
 
     # Start the server in sync mode, the parent ruby process' stdin, stdout
@@ -33,20 +33,20 @@ module MCSMP
     #
     # @note this will block the current thread until the server is stopped
     def start_sync
-      return if @running
+      return if running?
 
       jar_path = File.join(@instance.physical_path, 'server.jar')
       Process.wait(Process.spawn(
                      "#{@java_executable} #{arguments} -jar #{jar_path}",
                      chdir: @instance.physical_path
-      ))
+                   ))
     end
 
     # Start the server in the background, writing all output to the @log
     # variable. Stdin writing is achieved using the ServerRunner#send_text
     # method.
     def start_async(&on_read)
-      return if @running
+      return if running?
 
       jar_path = File.join(@instance.physical_path, 'server.jar')
       stdin, stdout, thread = Open3.popen2e(
@@ -55,19 +55,18 @@ module MCSMP
       )
       @log = []
       start_log_reader(stdout, thread, &on_read)
+      instance.start_watcher
       @stdin = stdin
       @server_thread = thread
-      @running = true
     end
 
     def stop
-      return unless @running
+      return unless running?
       return if @stdin.nil?
 
       @stdin.puts 'stop'
       @stdin = nil
       @server_thread.join
-      @running = false
     end
 
     def send_text(text = '')
@@ -105,7 +104,7 @@ module MCSMP
           end
           @log_mutex.synchronize do
             @log.push(data)
-            @log.pop(@log.size - @log_limit) if @log.size > @log_limit
+            @log.drop(@log.size - @log_limit) if @log.size > @log_limit
           end
           yield(data) if block_given?
         end

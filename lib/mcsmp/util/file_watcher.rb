@@ -8,7 +8,7 @@ module MCSMP
       attr_accessor :file_path
 
       def initialize(file_path, interval: 1, &on_change)
-        @file_path = file_path
+        @file_path = File.absolute_path(file_path)
         @interval = interval
         @on_change = on_change
         @running_thread = nil
@@ -25,6 +25,8 @@ module MCSMP
       end
 
       def stop
+        return unless @running_thread
+
         @running_thread.exit
         @running_thread = nil
       end

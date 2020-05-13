@@ -14,71 +14,33 @@ class MCSMPCLI < Thor
     runner.start_sync
   end
 
-  desc 'pry PATH', 'Run an PRY console at the target folder and get all'\
-    'server instances in it'
-  method_option :with_server, aliases: '-s', desc: 'Start the connector as well'
-  method_option :no_autostart, aliases: '-A'
-  method_option :connector_secret, aliases: '-c'
-  def pry_start(path = File.absolute_path(Dir.pwd))
-    require 'pry'
-
-    abort('Secret must be provided if used with the server!') if
-        options[:with_server] && !options[:connector_secret]
-
-    instances = MCSMP::Util.get_instances(path)
-    runners = get_runners(instances)
-    autostart(runners) unless options[:no_autostart]
-    if options[:with_server]
-      MCSMP::HTTPConnector.configuration = {
-        instances: instances,
-        secret: options[:connector_secret],
-        runners: runners
-      }
-      Thread.new { MCSMP::HTTPConnector.run! }
-    end
-    pry(Struct.new(:instances, :runners).new(instances, runners))
-    MCSMP::HTTPConnector.quit! if options[:with_server]
-    runners.each(&:stop)
-
-  rescue LoadError
-    warn 'Install PRY to use this option: gem install pry'
-  end
-
-  desc 'start-server PATH', 'Start in connector mode'
-  method_option :no_autostart, aliases: '-A'
-  method_option :secret, required: true, aliases: '-c'
+  desc 'start_connector PATH', 'Start the connector at the target folder'
+  method_option :pry, type: :boolean, aliases: '-P',
+                      desc: 'Additionally start a pry instance'
+  method_option :key, aliases: '-k', desc: 'Set the connection secret'
+  method_option :port, aliases: '-p', desc: 'Set the connector port'
+  method_option :host, aliases: '-h', desc: 'Set the connector host'
+  method_option :not_local, type: :boolean, aliases: '-l',
+                            desc: 'run with authentication'
+  method_option :no_autostart, type: :boolean, desc: 'Disable server autostarting'
   def start_connector(path = File.absolute_path(Dir.pwd))
-    instances = MCSMP::Util.get_instances(path)
-    runners = get_runners(instances)
-    autostart(runners) unless options[:no_autostart]
-    MCSMP::HTTPConnector.configuration = {
-      instances: instances,
-      secret: options[:secret],
-      runners: runners
-    }
-    MCSMP::HTTPConnector.run!
-    runners.each(&:stop)
+    config = MCSMP::ConnectorConfig.new
+    config_from_options(config, options)
+    config.path = File.absolute_path(path)
+    puts config.connection_secret unless options[:key] || config.is_local
+    MCSMP::Connector.instance.config = config
+    no_autostart = options[:no_autostart] || false
+    with_pry = options[:pry] || false
+    MCSMP::Connector.instance.load_connector(autostart: !no_autostart, with_pry: with_pry)
   end
 
   private
 
-  def get_runners(instances)
-    runners = []
-    instances.each do |instance|
-      next unless instance.exists?
-
-      runner = MCSMP::ServerRunner.new(instance)
-      runners.push(runner)
-    end
-    runners
-  end
-
-  def autostart(runners)
-    runners.each do |r|
-      next unless File.exist?(File.join(r.instance.physical_path, '.autostart'))
-
-      r.start_async
-    end
+  def config_from_options(config, options)
+    config.port =               options[:port]     if options[:port]
+    config.host =               options[:host]     if options[:host]
+    config.connection_secret =  options[:key]      if options[:key]
+    config.is_local          = !options[:not_local] if options[:not_local]
   end
 end
 

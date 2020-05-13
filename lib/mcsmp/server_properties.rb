@@ -63,7 +63,7 @@ module MCSMP
       function_permission_level: integer,
       gamemode: enum(%w[survival creative adventure spectator]),
       generate_structures: boolean,
-      generator_setting: string,
+      generator_settings: string,
       hardcore: boolean,
       level_name: string,
       level_seed: string,
@@ -90,6 +90,7 @@ module MCSMP
       spawn_monsters: boolean,
       spawn_npcs: boolean,
       spawn_protection: integer,
+      prevent_proxy_connections: boolean,
       use_native_transport: boolean,
       view_distance: integer,
       white_list: boolean,
@@ -122,7 +123,7 @@ module MCSMP
     def to_config
       config_output = String.new
       @properties.each do |k, v|
-        line = k.to_s.sub('__', '.').sub('_', '-') + '=' + v.to_s
+        line = k.to_s.gsub('__', '.').gsub('_', '-') + '=' + v.to_s
         config_output << line + "\n"
       end
       config_output
@@ -135,7 +136,7 @@ module MCSMP
         next if line.start_with? '='
 
         key, value = line.strip.split '='
-        key = key.sub('.', '__').sub('-', '_').to_sym
+        key = key.gsub('.', '__').gsub('-', '_').to_sym
         next unless available_fields.key? key
 
         value &&= available_fields[key].call value, true
@@ -163,6 +164,10 @@ module MCSMP
       raise PropertyError unless @properties.key? property
 
       @properties[property]
+    end
+
+    def to_json(*args)
+      @properties.to_json(args)
     end
   end
 end

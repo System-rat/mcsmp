@@ -142,6 +142,10 @@ module MCSMP
       new_config.with_aggressive_optimizations if aggressive
       runner.jvm_arguments = new_config
     end
+
+    get '/heartbeat' do
+      'Am alive'
+    end
   end
 rescue LoadError
   warn 'Install sinatra for this to work'

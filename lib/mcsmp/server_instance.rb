@@ -84,6 +84,27 @@ module MCSMP
       @exists
     end
 
+    def download_version(new_version)
+      return @version if new_version == @version.version
+
+      @version = MCSMP::MineCraftVersion.specific_version(new_version)
+      @version.download_information.download(File.join(@path, 'server.jar'))
+      @version
+    end
+
+    def download_latest(is_snapshot)
+      if (is_snapshot &&
+          @version.version == MCSMP::MineCraftVersion.latest_snapshot.version) ||
+         @version.version == MCSMP::MineCraftVersion.latest_release.version
+        return @version
+      end
+
+      @version = MCSMP::MineCraftVersion.latest_snapshot if is_snapshot
+      @version = MCSMP::MineCraftVersion.latest_release unless is_snapshot
+      @version.download_information.download(File.join(@path, 'server.jar'))
+      @version
+    end
+
     def refresh_properties
       return if physical_path.nil?
 

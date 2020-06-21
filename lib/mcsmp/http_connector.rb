@@ -143,6 +143,32 @@ module MCSMP
       runner.jvm_arguments = new_config
     end
 
+    post '/set_version/:name' do |name|
+      runner = runner_with_name(name)
+      next [500, 'Server does not exist.'] unless runner
+
+      version = params[:version]
+      runner.stop
+      runner.instance.download_version(version)
+      runner.start_async
+      {
+        new_state: runner
+      }.to_json
+    end
+
+    post '/set_latest_version/:name' do |name|
+      runner = runner_with_name(name)
+      next [500, 'Server does not exist.'] unless runner
+
+      snapshot = params[:is_snapshot]
+      runner.stop
+      runner.instance.download_latest(snapshot)
+      runner.start_async
+      {
+        new_state: runner
+      }.to_json
+    end
+
     get '/heartbeat' do
       'Am alive'
     end

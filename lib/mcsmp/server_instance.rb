@@ -88,7 +88,7 @@ module MCSMP
       return @version if new_version == @version.version
 
       @version = MCSMP::MineCraftVersion.specific_version(new_version)
-      @version.download_information.download(File.join(@path, 'server.jar'))
+      @version.download_information.download(File.join(@physical_path, 'server.jar'))
       @version
     end
 
@@ -101,7 +101,7 @@ module MCSMP
 
       @version = MCSMP::MineCraftVersion.latest_snapshot if is_snapshot
       @version = MCSMP::MineCraftVersion.latest_release unless is_snapshot
-      @version.download_information.download(File.join(@path, 'server.jar'))
+      @version.download_information.download(File.join(@physical_path, 'server.jar'))
       @version
     end
 

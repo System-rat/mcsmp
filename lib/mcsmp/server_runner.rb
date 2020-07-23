@@ -60,10 +60,11 @@ module MCSMP
       @server_thread = thread
     end
 
-    def stop
+    def stop(reason = nil)
       return unless running?
       return if @stdin.nil?
 
+      @stdin.puts "kick @a #{reason}" if reason
       @stdin.puts 'stop'
       @stdin = nil
       @server_thread.join

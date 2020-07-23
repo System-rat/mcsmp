@@ -95,7 +95,8 @@ module MCSMP
     def download_latest(is_snapshot)
       if (is_snapshot &&
           @version.version == MCSMP::MineCraftVersion.latest_snapshot.version) ||
-         @version.version == MCSMP::MineCraftVersion.latest_release.version
+         (!is_snapshot &&
+          @version.version == MCSMP::MineCraftVersion.latest_release.version)
         return @version
       end
 

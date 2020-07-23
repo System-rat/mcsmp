@@ -133,8 +133,10 @@ module MCSMP
       private
 
       def latest(type)
-        version = manifest['versions'].find do |v|
-          v['id'] == manifest['latest'][type.to_s]
+        version = if type == :snapshot then
+          manifest['versions'].first
+        else
+          manifest['versions'].find { |v| v['id'] == manifest['latest']['release'] }
         end
         MCVersion.new(version['id'], type == :snapshot, version['url'])
       end

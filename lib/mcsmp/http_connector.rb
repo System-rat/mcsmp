@@ -132,9 +132,9 @@ module MCSMP
       runner = runner_with_name(name)
       next [500, 'Server does not exist.'] unless runner
 
-      i_memory = params[:i_memory] || runner.jvm_arguments.initial_memory
-      m_memory = params[:m_memory] || runner.jvm_arguments.max_memory
-      aggressive = params[:aggressive] || runner.jvm_arguments.aggressive
+      i_memory = params['i_memory'] || runner.jvm_arguments.initial_memory
+      m_memory = params['m_memory'] || runner.jvm_arguments.max_memory
+      aggressive = params['aggressive'] || runner.jvm_arguments.aggressive
       new_config = MCSMP::Util::JVMArguments
                    .new
                    .with_initial_memory(i_memory)
@@ -147,7 +147,7 @@ module MCSMP
       runner = runner_with_name(name)
       next [500, 'Server does not exist.'] unless runner
 
-      version = params[:version]
+      version = params['version']
       runner.stop
       runner.instance.download_version(version)
       runner.start_async
@@ -160,10 +160,11 @@ module MCSMP
       runner = runner_with_name(name)
       next [500, 'Server does not exist.'] unless runner
 
-      snapshot = params[:is_snapshot]
-      runner.stop
+      snapshot = params['is_snapshot']
+      was_running = runner.running?
+      runner.stop('Server updating')
       runner.instance.download_latest(snapshot)
-      runner.start_async
+      runner.start_async if was_running
       {
         new_state: runner
       }.to_json

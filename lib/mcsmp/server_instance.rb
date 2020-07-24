@@ -106,6 +106,14 @@ module MCSMP
       @version
     end
 
+    def needs_to_update(is_snapshot)
+      if is_snapshot
+        version.version != MCSMP::MineCraftVersion.latest_snapshot.version
+      else
+        version.version != MCSMP::MineCraftVersion.latest_release.version
+      end
+    end
+
     def refresh_properties
       return if physical_path.nil?
 

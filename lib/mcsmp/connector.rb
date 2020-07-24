@@ -27,6 +27,12 @@ module MCSMP
     def load_connector(autostart: true, with_pry: false)
       @server_instances = MCSMP::Util.get_instances(path)
       @server_runners = MCSMP::Util.get_runners(@server_instances)
+      @cache_invalidator = Thread.start do
+        loop do
+          sleep 300
+          MCSMP::MineCraftVersion.invalidate_manifest_cache
+        end
+      end
       self.autostart if autostart
       start_connector(!with_pry)
       return unless with_pry
@@ -49,6 +55,7 @@ module MCSMP
     def stop
       MCSMP::HTTPConnector.stop!
       @server_runners.each(&:stop)
+      Thread.kill(@cache_invalidator)
     end
 
     private

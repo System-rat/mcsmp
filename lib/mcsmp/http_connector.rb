@@ -9,6 +9,7 @@ module MCSMP
 
     set :port, 1337
     set :hostname, 'localhost'
+    set :server, :puma
 
     def self.configuration=(conf)
       @conf = conf
@@ -162,9 +163,11 @@ module MCSMP
 
       snapshot = params['is_snapshot']
       was_running = runner.running?
-      runner.stop('Server updating')
-      runner.instance.download_latest(snapshot)
-      runner.start_async if was_running
+      if runner.instance.needs_to_update(snapshot)
+        runner.stop('Server updating')
+        runner.instance.download_latest(snapshot)
+        runner.start_async if was_running
+      end
       {
         new_state: runner
       }.to_json

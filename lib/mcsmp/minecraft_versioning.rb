@@ -124,20 +124,20 @@ module MCSMP
       version ||= snapshot.find do |v|
         v.version == version_name
       end
-      raise ArgumentError, 'Version does not exist' unless version
+      raise ArgumentError, "Version does not exist: #{version_name}" unless version
 
       version
     end
-    
+
     class << self
       private
 
       def latest(type)
-        version = if type == :snapshot then
-          manifest['versions'].first
-        else
-          manifest['versions'].find { |v| v['id'] == manifest['latest']['release'] }
-        end
+        version = if type == :snapshot
+                    manifest['versions'].first
+                  else
+                    manifest['versions'].find { |v| v['id'] == manifest['latest']['release'] }
+                  end
         MCVersion.new(version['id'], type == :snapshot, version['url'])
       end
     end

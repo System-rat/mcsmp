@@ -149,9 +149,10 @@ module MCSMP
       next [500, 'Server does not exist.'] unless runner
 
       version = params['version']
+      was_running = runner.running?
       runner.stop
       runner.instance.download_version(version)
-      runner.start_async
+      runner.start_async if was_running
       {
         new_state: runner
       }.to_json

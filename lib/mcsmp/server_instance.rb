@@ -64,6 +64,7 @@ module MCSMP
       return if exists?
 
       path = File.join(parent_dir, @server_name)
+      raise IOError, 'Server name already exists' unless !File.exist? path
       FileUtils.mkdir(path)
       @physical_path = path
       write_properties
@@ -78,6 +79,12 @@ module MCSMP
       puts ' Done!'
       @exists = true
       create_watcher
+    end
+    
+    def delete
+      return if !exists?
+      
+      FileUtils.remove_dir physical_path
     end
 
     def exists?

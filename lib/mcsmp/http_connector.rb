@@ -57,6 +57,31 @@ module MCSMP
       }.to_json
     end
 
+    post '/create_server' do
+      body = JSON.parse(request.body.read)
+      server_name = body['server_name']
+      server_version = body['server_version']
+      puts server_version
+      version = nil
+      version = MCSMP::MineCraftVersion.specific_version(server_version) unless
+        server_version.nil? || server_version === ''
+      runner = connector.create_server(server_name, version)
+      {
+        data: runner
+      }.to_json
+    rescue ArgumentError
+      [500, { message: 'Incorrect version name' }.to_json]
+    rescue IOError
+      [500, { message: 'Server already exists'}.to_json]
+    end
+
+    post '/delete_server/:name' do |name|
+      connector.delete_server(name)
+      { message: 'Server deleted' }.to_json
+    rescue ArgumentError
+      [500, { message: 'Server does not exist.' }.to_json]
+    end
+
     get '/get_log' do
       pass unless params['name']
       limit = params['limit'] || 100

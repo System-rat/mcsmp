@@ -58,6 +58,28 @@ module MCSMP
       Thread.kill(@cache_invalidator)
     end
 
+    def create_server(server_name, server_version = nil)
+      new_instance = if server_version == nil
+        MCSMP::ServerInstance.from_latest(server_name)
+      else
+        MCSMP::ServerInstance.from_version(server_version, server_name)
+      end
+      new_instance.create_at_path(path)
+      new_runner = MCSMP::ServerRunner.new(new_instance)
+      server_instances.push(new_instance)
+      server_runners.push(new_runner)
+      new_runner
+    end
+
+    def delete_server(server_name)
+      server = server_runners.find_index { |r| r.instance.server_name == server_name }
+      raise ArgumentError, 'Server does not exist' if server.nil?
+
+      warn("WARNING: Deleting server: #{server_name}")
+      server_runners[server].delete
+      server_runners.delete_at(server)
+    end
+
     private
 
     def start_connector(blocking = false)

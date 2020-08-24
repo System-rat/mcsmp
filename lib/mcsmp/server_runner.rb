@@ -70,6 +70,11 @@ module MCSMP
       @server_thread.join
     end
 
+    def delete
+      stop 'Server deleted'
+      instance.delete
+    end
+
     def send_text(text = '')
       return if @stdin.nil?
 
